@@ -12,4 +12,15 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
+  role?: string;
+  organization?: string;
+  lastLogin?: string;
+  preferences?: UserPreferences;
+}
+
+export interface UserPreferences {
+  theme?: 'light' | 'dark' | 'system';
+  language?: string;
+  notifications?: boolean;
+  defaultView?: string;
 }
