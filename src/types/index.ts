@@ -24,3 +24,13 @@ export interface UserPreferences {
   notifications?: boolean;
   defaultView?: string;
 }
+
+export interface PowerBICredentials {
+  capacityId: string;
+  workspaceId: string;
+  clientId: string;
+  clientSecret: string;
+  tenantId: string;
+  isConnected?: boolean;
+  lastRefresh?: string;
+}

@@ -4,6 +4,7 @@ import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserSettings from "@/components/UserSettings";
 import NavigationSettings from "@/components/NavigationSettings";
+import PowerBICredentials from "@/components/PowerBICredentials";
 
 const Settings: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const Settings: React.FC = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="user">User Profile</TabsTrigger>
             <TabsTrigger value="navigation">Navigation</TabsTrigger>
+            <TabsTrigger value="credentials">Power BI Credentials</TabsTrigger>
           </TabsList>
           
           <TabsContent value="user">
@@ -23,6 +25,10 @@ const Settings: React.FC = () => {
           
           <TabsContent value="navigation">
             <NavigationSettings />
+          </TabsContent>
+          
+          <TabsContent value="credentials">
+            <PowerBICredentials />
           </TabsContent>
         </Tabs>
       </div>
