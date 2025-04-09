@@ -97,7 +97,7 @@ export const Sidebar = () => {
     <div
       className={cn(
         "h-screen bg-powerbi-dark text-white flex flex-col transition-all duration-300",
-        collapsed ? "w-16" : "w-64"
+        collapsed ? "w-auto min-w-16" : "w-64"
       )}
     >
       <div className="flex items-center justify-between p-4 border-b border-powerbi-accent/20">
@@ -122,21 +122,23 @@ export const Sidebar = () => {
             <div 
               className={cn(
                 "flex items-center px-4 py-2 text-gray-300 cursor-pointer",
-                collapsed ? "justify-center" : "justify-between"
+                collapsed ? "justify-start" : "justify-between"
               )}
-              onClick={() => !collapsed && toggleCategory(index)}
+              onClick={() => toggleCategory(index)}
             >
-              {category.icon}
+              <div className="flex items-center">
+                {category.icon}
+                <span className={cn("font-medium text-sm ml-2", collapsed ? "block" : "block")}>
+                  {category.name}
+                </span>
+              </div>
               
               {!collapsed && (
-                <>
-                  <span className="font-medium text-sm">{category.name}</span>
-                  {category.expanded ? (
-                    <ChevronDown className="h-4 w-4" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4" />
-                  )}
-                </>
+                category.expanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )
               )}
             </div>
             
@@ -164,14 +166,14 @@ export const Sidebar = () => {
             
             {/* Show only icons when collapsed */}
             {(collapsed && category.items) && (
-              <div className="flex flex-col items-center space-y-1 mt-1">
+              <div className="flex flex-col items-start space-y-1 mt-1 px-2">
                 {category.items.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
                       cn(
-                        "flex justify-center items-center p-2 rounded-md transition-colors",
+                        "flex items-center p-2 rounded-md transition-colors w-full",
                         isActive
                           ? "bg-powerbi-primary text-white"
                           : "text-gray-300 hover:bg-powerbi-primary/20"
@@ -179,7 +181,10 @@ export const Sidebar = () => {
                     }
                     title={item.name}
                   >
-                    {item.icon}
+                    <div className="flex items-center">
+                      {item.icon}
+                      <span className="ml-2 text-xs">{item.name}</span>
+                    </div>
                   </NavLink>
                 ))}
               </div>
@@ -193,7 +198,7 @@ export const Sidebar = () => {
         className={({ isActive }) =>
           cn(
             "flex items-center py-2 px-4 m-2 rounded-md transition-colors",
-            collapsed ? "justify-center" : "justify-start",
+            collapsed ? "justify-start" : "justify-start",
             isActive
               ? "bg-powerbi-primary text-white"
               : "text-gray-300 hover:bg-powerbi-primary/20"
@@ -201,17 +206,19 @@ export const Sidebar = () => {
         }
       >
         <Settings className="h-5 w-5" />
-        {!collapsed && <span className="ml-3">Settings</span>}
+        <span className={cn("ml-3", collapsed ? "block text-xs" : "block")}>Settings</span>
       </NavLink>
 
       <div className="p-4 border-t border-powerbi-accent/20">
         <NavLink
           to="/login"
-          className="flex items-center py-2 px-4 rounded-md text-gray-300 hover:bg-powerbi-primary/20 transition-colors"
-          style={{ justifyContent: collapsed ? "center" : "start" }}
+          className={cn(
+            "flex items-center py-2 px-4 rounded-md text-gray-300 hover:bg-powerbi-primary/20 transition-colors",
+            collapsed ? "justify-start" : "justify-start"
+          )}
         >
           <LogOut className="h-5 w-5" />
-          {!collapsed && <span className="ml-3">Logout</span>}
+          <span className={cn("ml-3", collapsed ? "block text-xs" : "block")}>Logout</span>
         </NavLink>
       </div>
     </div>
