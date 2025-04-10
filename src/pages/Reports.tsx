@@ -8,27 +8,27 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Report } from "@/types";
 
-// Demo reports data
+// Demo reports data with the Power BI playground sample report
 const reportCategories = {
   recent: [
     {
       id: "1",
       name: "Sales Performance",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample1",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Overview of sales performance across regions",
       thumbnail: "https://via.placeholder.com/200x120/0078D4/FFFFFF?text=Sales"
     },
     {
       id: "2",
       name: "Marketing Campaign Results",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample2",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Analysis of recent marketing campaigns",
       thumbnail: "https://via.placeholder.com/200x120/00B7C3/FFFFFF?text=Marketing"
     },
     {
       id: "3",
       name: "Financial Overview Q1",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample3",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Q1 financial performance and metrics",
       thumbnail: "https://via.placeholder.com/200x120/83B9F9/FFFFFF?text=Finance"
     }
@@ -37,14 +37,14 @@ const reportCategories = {
     {
       id: "2",
       name: "Marketing Campaign Results",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample2",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Analysis of recent marketing campaigns",
       thumbnail: "https://via.placeholder.com/200x120/00B7C3/FFFFFF?text=Marketing"
     },
     {
       id: "4",
       name: "Customer Insights",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample4",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Customer behavior and satisfaction analysis",
       thumbnail: "https://via.placeholder.com/200x120/0D2135/FFFFFF?text=Customers"
     }
@@ -53,42 +53,42 @@ const reportCategories = {
     {
       id: "1",
       name: "Sales Performance",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample1",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Overview of sales performance across regions",
       thumbnail: "https://via.placeholder.com/200x120/0078D4/FFFFFF?text=Sales"
     },
     {
       id: "2",
       name: "Marketing Campaign Results",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample2",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Analysis of recent marketing campaigns",
       thumbnail: "https://via.placeholder.com/200x120/00B7C3/FFFFFF?text=Marketing"
     },
     {
       id: "3",
       name: "Financial Overview Q1",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample3", 
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed", 
       description: "Q1 financial performance and metrics",
       thumbnail: "https://via.placeholder.com/200x120/83B9F9/FFFFFF?text=Finance"
     },
     {
       id: "4",
       name: "Customer Insights",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample4",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Customer behavior and satisfaction analysis",
       thumbnail: "https://via.placeholder.com/200x120/0D2135/FFFFFF?text=Customers"
     },
     {
       id: "5",
       name: "HR Dashboard",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample5",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Employee metrics and HR analytics",
       thumbnail: "https://via.placeholder.com/200x120/E6F2FF/000000?text=HR"
     },
     {
       id: "6",
       name: "Supply Chain Analysis",
-      embedUrl: "https://app.powerbi.com/reportEmbed?reportId=sample6",
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Supply chain performance and logistics",
       thumbnail: "https://via.placeholder.com/200x120/00B7C3/FFFFFF?text=Supply"
     }
