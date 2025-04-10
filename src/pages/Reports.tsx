@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Report } from "@/types";
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 
 // Demo reports data with the Power BI playground sample report
 const reportCategories = {
@@ -95,15 +96,49 @@ const reportCategories = {
   ]
 };
 
+// Navigation reports data
+const navigationReports = [
+  {
+    id: "nav1",
+    name: "Sales Dashboard",
+    embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
+    description: "Overview of sales performance"
+  },
+  {
+    id: "nav2",
+    name: "Marketing Analysis",
+    embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
+    description: "Marketing campaign effectiveness"
+  },
+  {
+    id: "nav3",
+    name: "Financial Reports",
+    embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
+    description: "Financial performance metrics"
+  },
+  {
+    id: "nav4",
+    name: "Customer Insights",
+    embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
+    description: "Customer behavior analytics"
+  }
+];
+
 const Reports: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [navReport, setNavReport] = useState<Report | null>(null);
 
   // Filter reports based on search query
   const filteredReports = reportCategories[selectedTab as keyof typeof reportCategories].filter(
     report => report.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Handle navigation report selection
+  const handleNavReportSelect = (report: Report) => {
+    setNavReport(report);
+  };
 
   return (
     <Layout>
@@ -120,6 +155,31 @@ const Reports: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Navigation Menu with embedded reports */}
+        <NavigationMenu className="max-w-full w-full">
+          <NavigationMenuList className="w-full justify-start">
+            {navigationReports.map((report) => (
+              <NavigationMenuItem key={report.id}>
+                <NavigationMenuTrigger 
+                  onClick={() => handleNavReportSelect(report)}
+                  className={navReport?.id === report.id ? "bg-accent text-accent-foreground" : ""}
+                >
+                  {report.name}
+                </NavigationMenuTrigger>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuList>
+        </NavigationMenu>
+
+        {/* Display the selected navigation report */}
+        {navReport && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-2">{navReport.name}</h2>
+            <p className="text-gray-500 mb-4">{navReport.description}</p>
+            <ReportViewer report={navReport} />
+          </div>
+        )}
 
         <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList>
@@ -158,7 +218,8 @@ const Reports: React.FC = () => {
                   ))}
                 </div>
 
-                <ReportViewer report={selectedReport} />
+                {/* Only show this report viewer if no navigation report is selected */}
+                {!navReport && <ReportViewer report={selectedReport} />}
               </>
             )}
           </TabsContent>
