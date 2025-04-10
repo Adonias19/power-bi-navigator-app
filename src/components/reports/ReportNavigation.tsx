@@ -16,12 +16,14 @@ const ReportNavigation: React.FC<ReportNavigationProps> = ({
 }) => {
   return (
     <NavigationMenu className="max-w-full w-full">
-      <NavigationMenuList className="w-full justify-start">
+      <NavigationMenuList className="w-full justify-start border-b pb-2 mb-4">
         {reports.map((report) => (
           <NavigationMenuItem key={report.id}>
             <NavigationMenuTrigger 
               onClick={() => onSelectReport(report)}
-              className={selectedReport?.id === report.id ? "bg-accent text-accent-foreground" : ""}
+              className={selectedReport?.id === report.id ? 
+                "bg-powerbi-primary text-white" : 
+                "hover:bg-gray-100"}
             >
               {report.name}
             </NavigationMenuTrigger>

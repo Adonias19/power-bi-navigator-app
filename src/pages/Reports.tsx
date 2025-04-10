@@ -128,17 +128,19 @@ const Reports: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [navReport, setNavReport] = useState<Report | null>(null);
   
-  // Set report from URL if available
+  // Always set default report from URL or navigation
   useEffect(() => {
     if (location.state?.embedUrl) {
-      setNavReport({
+      setSelectedReport({
         id: "url-embedded",
         name: "Embedded Report",
         embedUrl: location.state.embedUrl,
         description: "Power BI report embedded from navigation"
       });
+    } else if (navigationReports.length > 0) {
+      // Default to first navigation report if no URL report
+      setSelectedReport(navigationReports[0]);
     }
   }, [location.state]);
 
@@ -149,7 +151,7 @@ const Reports: React.FC = () => {
 
   // Handle navigation report selection
   const handleNavReportSelect = (report: Report) => {
-    setNavReport(report);
+    setSelectedReport(report);
   };
 
   return (
@@ -163,20 +165,17 @@ const Reports: React.FC = () => {
           />
         </div>
 
-        {/* Only show navigation menu if no URL report is set */}
-        {!location.state?.embedUrl && (
-          <ReportNavigation 
-            reports={navigationReports} 
-            selectedReport={navReport} 
-            onSelectReport={handleNavReportSelect} 
-          />
-        )}
+        <ReportNavigation 
+          reports={navigationReports} 
+          selectedReport={selectedReport} 
+          onSelectReport={handleNavReportSelect} 
+        />
 
-        {/* Display the selected navigation report */}
-        <ReportDisplay report={navReport} />
+        {/* Display the selected report */}
+        <ReportDisplay report={selectedReport} />
 
-        {/* Only show tabs and card grid if no report is selected from navigation or URL */}
-        {!navReport && (
+        {/* Only show tabs and card grid if specifically requested */}
+        {false && (
           <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList>
               <TabsTrigger value="recent">Recent</TabsTrigger>
@@ -190,8 +189,6 @@ const Reports: React.FC = () => {
                 selectedReport={selectedReport} 
                 onSelectReport={setSelectedReport} 
               />
-
-              <ReportDisplay report={selectedReport} />
             </TabsContent>
           </Tabs>
         )}
