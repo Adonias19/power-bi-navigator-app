@@ -1,14 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
-import ReportViewer from "@/components/ReportViewer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Report } from "@/types";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
+import ReportSearch from "@/components/reports/ReportSearch";
+import ReportGrid from "@/components/reports/ReportGrid";
+import ReportNavigation from "@/components/reports/ReportNavigation";
+import ReportDisplay from "@/components/reports/ReportDisplay";
 
 // Demo reports data with the Power BI playground sample report
 const reportCategories = {
@@ -69,7 +67,7 @@ const reportCategories = {
     {
       id: "3",
       name: "Financial Overview Q1",
-      embedUrl: "https://playground.powerbi.com/sampleReportEmbed", 
+      embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
       description: "Q1 financial performance and metrics",
       thumbnail: "https://via.placeholder.com/200x120/83B9F9/FFFFFF?text=Finance"
     },
@@ -159,45 +157,23 @@ const Reports: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-800">Reports</h1>
-          <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search reports..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <ReportSearch 
+            searchQuery={searchQuery} 
+            setSearchQuery={setSearchQuery} 
+          />
         </div>
 
         {/* Only show navigation menu if no URL report is set */}
         {!location.state?.embedUrl && (
-          <>
-            <NavigationMenu className="max-w-full w-full">
-              <NavigationMenuList className="w-full justify-start">
-                {navigationReports.map((report) => (
-                  <NavigationMenuItem key={report.id}>
-                    <NavigationMenuTrigger 
-                      onClick={() => handleNavReportSelect(report)}
-                      className={navReport?.id === report.id ? "bg-accent text-accent-foreground" : ""}
-                    >
-                      {report.name}
-                    </NavigationMenuTrigger>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </>
+          <ReportNavigation 
+            reports={navigationReports} 
+            selectedReport={navReport} 
+            onSelectReport={handleNavReportSelect} 
+          />
         )}
 
         {/* Display the selected navigation report */}
-        {navReport && (
-          <div className="mt-6">
-            <h2 className="text-xl font-semibold mb-2">{navReport.name}</h2>
-            <p className="text-gray-500 mb-4">{navReport.description}</p>
-            <ReportViewer report={navReport} />
-          </div>
-        )}
+        <ReportDisplay report={navReport} />
 
         {/* Only show tabs and card grid if no report is selected from navigation or URL */}
         {!navReport && (
@@ -209,38 +185,13 @@ const Reports: React.FC = () => {
             </TabsList>
             
             <TabsContent value={selectedTab} className="mt-6">
-              {filteredReports.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  No reports found. Try a different search term.
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {filteredReports.map((report) => (
-                      <Card 
-                        key={report.id} 
-                        className={`cursor-pointer transition-all hover:shadow-md ${
-                          selectedReport?.id === report.id ? 'ring-2 ring-powerbi-primary' : ''
-                        }`}
-                        onClick={() => setSelectedReport(report)}
-                      >
-                        <CardContent className="p-0">
-                          <div 
-                            className="h-32 bg-cover bg-center" 
-                            style={{ backgroundImage: `url(${report.thumbnail})` }}
-                          />
-                          <div className="p-4">
-                            <h3 className="font-medium">{report.name}</h3>
-                            <p className="text-sm text-gray-500 mt-1">{report.description}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+              <ReportGrid 
+                reports={filteredReports} 
+                selectedReport={selectedReport} 
+                onSelectReport={setSelectedReport} 
+              />
 
-                  <ReportViewer report={selectedReport} />
-                </>
-              )}
+              <ReportDisplay report={selectedReport} />
             </TabsContent>
           </Tabs>
         )}
