@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import ReportViewer from "@/components/ReportViewer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -125,10 +126,23 @@ const navigationReports = [
 ];
 
 const Reports: React.FC = () => {
+  const location = useLocation();
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [navReport, setNavReport] = useState<Report | null>(null);
+  
+  // Set report from URL if available
+  useEffect(() => {
+    if (location.state?.embedUrl) {
+      setNavReport({
+        id: "url-embedded",
+        name: "Embedded Report",
+        embedUrl: location.state.embedUrl,
+        description: "Power BI report embedded from navigation"
+      });
+    }
+  }, [location.state]);
 
   // Filter reports based on search query
   const filteredReports = reportCategories[selectedTab as keyof typeof reportCategories].filter(
@@ -156,21 +170,25 @@ const Reports: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Menu with embedded reports */}
-        <NavigationMenu className="max-w-full w-full">
-          <NavigationMenuList className="w-full justify-start">
-            {navigationReports.map((report) => (
-              <NavigationMenuItem key={report.id}>
-                <NavigationMenuTrigger 
-                  onClick={() => handleNavReportSelect(report)}
-                  className={navReport?.id === report.id ? "bg-accent text-accent-foreground" : ""}
-                >
-                  {report.name}
-                </NavigationMenuTrigger>
-              </NavigationMenuItem>
-            ))}
-          </NavigationMenuList>
-        </NavigationMenu>
+        {/* Only show navigation menu if no URL report is set */}
+        {!location.state?.embedUrl && (
+          <>
+            <NavigationMenu className="max-w-full w-full">
+              <NavigationMenuList className="w-full justify-start">
+                {navigationReports.map((report) => (
+                  <NavigationMenuItem key={report.id}>
+                    <NavigationMenuTrigger 
+                      onClick={() => handleNavReportSelect(report)}
+                      className={navReport?.id === report.id ? "bg-accent text-accent-foreground" : ""}
+                    >
+                      {report.name}
+                    </NavigationMenuTrigger>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+          </>
+        )}
 
         {/* Display the selected navigation report */}
         {navReport && (
@@ -181,49 +199,51 @@ const Reports: React.FC = () => {
           </div>
         )}
 
-        <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList>
-            <TabsTrigger value="recent">Recent</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            <TabsTrigger value="all">All Reports</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value={selectedTab} className="mt-6">
-            {filteredReports.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No reports found. Try a different search term.
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {filteredReports.map((report) => (
-                    <Card 
-                      key={report.id} 
-                      className={`cursor-pointer transition-all hover:shadow-md ${
-                        selectedReport?.id === report.id ? 'ring-2 ring-powerbi-primary' : ''
-                      }`}
-                      onClick={() => setSelectedReport(report)}
-                    >
-                      <CardContent className="p-0">
-                        <div 
-                          className="h-32 bg-cover bg-center" 
-                          style={{ backgroundImage: `url(${report.thumbnail})` }}
-                        />
-                        <div className="p-4">
-                          <h3 className="font-medium">{report.name}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{report.description}</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+        {/* Only show tabs and card grid if no report is selected from navigation or URL */}
+        {!navReport && (
+          <Tabs defaultValue="all" value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsList>
+              <TabsTrigger value="recent">Recent</TabsTrigger>
+              <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="all">All Reports</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value={selectedTab} className="mt-6">
+              {filteredReports.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No reports found. Try a different search term.
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {filteredReports.map((report) => (
+                      <Card 
+                        key={report.id} 
+                        className={`cursor-pointer transition-all hover:shadow-md ${
+                          selectedReport?.id === report.id ? 'ring-2 ring-powerbi-primary' : ''
+                        }`}
+                        onClick={() => setSelectedReport(report)}
+                      >
+                        <CardContent className="p-0">
+                          <div 
+                            className="h-32 bg-cover bg-center" 
+                            style={{ backgroundImage: `url(${report.thumbnail})` }}
+                          />
+                          <div className="p-4">
+                            <h3 className="font-medium">{report.name}</h3>
+                            <p className="text-sm text-gray-500 mt-1">{report.description}</p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
-                {/* Only show this report viewer if no navigation report is selected */}
-                {!navReport && <ReportViewer report={selectedReport} />}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+                  <ReportViewer report={selectedReport} />
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
+        )}
       </div>
     </Layout>
   );

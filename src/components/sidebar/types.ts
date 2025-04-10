@@ -12,4 +12,5 @@ export type NavItem = {
   name: string;
   path: string;
   icon?: ReactNode;
+  embedUrl?: string;
 };

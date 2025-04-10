@@ -28,12 +28,14 @@ export const Sidebar = () => {
         {
           name: "Overview",
           path: "/dashboard",
-          icon: <LayoutDashboard className="h-4 w-4" />
+          icon: <LayoutDashboard className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         },
         {
           name: "Analytics",
           path: "/dashboard/analytics",
-          icon: <PieChart className="h-4 w-4" />
+          icon: <PieChart className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         }
       ]
     },
@@ -45,22 +47,26 @@ export const Sidebar = () => {
         {
           name: "All Reports",
           path: "/reports",
-          icon: <BarChart3 className="h-4 w-4" />
+          icon: <BarChart3 className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         },
         {
           name: "Financial",
           path: "/reports/financial",
-          icon: <LineChart className="h-4 w-4" />
+          icon: <LineChart className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         },
         {
           name: "Marketing",
           path: "/reports/marketing",
-          icon: <AreaChart className="h-4 w-4" />
+          icon: <AreaChart className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         },
         {
           name: "Operations",
           path: "/reports/operations",
-          icon: <GanttChart className="h-4 w-4" />
+          icon: <GanttChart className="h-4 w-4" />,
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed"
         }
       ]
     }

@@ -3,12 +3,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type NavItem = {
-  name: string;
-  path: string;
-  icon?: React.ReactNode;
-};
+import { NavItem } from "./types";
 
 interface SidebarCategoryProps {
   name: string;
@@ -68,6 +63,7 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
                     : "text-gray-300 hover:bg-powerbi-primary/20"
                 )
               }
+              state={item.embedUrl ? { embedUrl: item.embedUrl } : undefined}
             >
               {item.icon}
               <span>{item.name}</span>
@@ -92,6 +88,7 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
                 )
               }
               title={item.name}
+              state={item.embedUrl ? { embedUrl: item.embedUrl } : undefined}
             >
               <div className="flex items-center">
                 {item.icon}
