@@ -15,22 +15,20 @@ export const useOrganizations = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user, profile, updateProfile } = useAuth();
+  const { user, profile, updateProfile, isSuperAdmin } = useAuth();
 
   const fetchOrganizations = async () => {
     try {
       setIsLoading(true);
       
-      // If user is admin, fetch all organizations
-      const isAdmin = profile?.role === 'admin';
-      
+      // If user is super admin, fetch all organizations
       let query = supabase
         .from('organizations')
         .select('*')
         .order('name');
         
-      // If not admin, only fetch the user's organization
-      if (!isAdmin) {
+      // If not super admin, only fetch the user's organization
+      if (!isSuperAdmin) {
         query = query.eq('id', profile?.organization_id);
       }
       
@@ -64,8 +62,8 @@ export const useOrganizations = () => {
         
       if (orgError) throw orgError;
       
-      // If admin user is creating a new org, don't switch to it
-      if (profile?.role !== 'admin') {
+      // If not super admin, update the user's profile to belong to this organization
+      if (!isSuperAdmin) {
         // Update the user's profile to belong to this organization
         await updateProfile({
           organization_id: orgData.id
@@ -134,7 +132,7 @@ export const useOrganizations = () => {
       setIsLoading(true);
       
       // Check if this is the user's current organization
-      if (id === profile?.organization_id) {
+      if (id === profile?.organization_id && !isSuperAdmin) {
         toast({
           title: "Cannot delete",
           description: "You cannot delete your current organization",
@@ -172,12 +170,61 @@ export const useOrganizations = () => {
     }
   };
 
+  const switchOrganization = async (organizationId: string) => {
+    try {
+      setIsLoading(true);
+      
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to switch organizations",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+      // Update the user's profile
+      const { error } = await supabase
+        .from('profiles')
+        .update({ organization_id: organizationId })
+        .eq('id', user.id);
+        
+      if (error) throw error;
+      
+      // Refresh the user profile to get the updated organization
+      await updateProfile({
+        organization_id: organizationId
+      });
+      
+      toast({
+        title: "Organization switched",
+        description: "You have switched to a different organization",
+      });
+      
+      // Reload the page to refresh all components
+      window.location.href = '/dashboard';
+      
+      return true;
+    } catch (error: any) {
+      console.error("Error switching organization:", error);
+      toast({
+        title: "Error",
+        description: "Failed to switch organization",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     organizations,
     isLoading,
     fetchOrganizations,
     createOrganization,
     updateOrganization,
-    deleteOrganization
+    deleteOrganization,
+    switchOrganization
   };
 };

@@ -3,8 +3,12 @@ import React, { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-const ProtectedRoute: React.FC = () => {
-  const { user, isLoading } = useAuth();
+interface ProtectedRouteProps {
+  requireSuperAdmin?: boolean;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requireSuperAdmin = false }) => {
+  const { user, isLoading, isSuperAdmin } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -21,7 +25,12 @@ const ProtectedRoute: React.FC = () => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // If user is authenticated, render children
+  // If route requires super admin and user is not super admin
+  if (requireSuperAdmin && !isSuperAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // If user is authenticated (and has required role if specified), render children
   return <Outlet />;
 };
 

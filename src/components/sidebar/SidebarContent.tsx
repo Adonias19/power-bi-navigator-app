@@ -26,6 +26,7 @@ export const SidebarContent: React.FC<SidebarContentProps> = ({
           collapsed={collapsed}
           index={index}
           toggleCategory={toggleCategory}
+          showEmbedUrl={true} // Always show embed URL info 
         />
       ))}
     </div>

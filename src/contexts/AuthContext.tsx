@@ -10,6 +10,7 @@ interface AuthContextProps {
   user: User | null;
   profile: any | null;
   isLoading: boolean;
+  isSuperAdmin: boolean;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -40,6 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
+          setIsSuperAdmin(false);
         }
       }
     );
@@ -83,6 +86,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       setProfile(data);
+      
+      // Check if this is the super admin account
+      const isSuperAdmin = data.email === 'adoniasjunk@gmail.com' || data.role === 'super_admin';
+      setIsSuperAdmin(isSuperAdmin);
+      
     } catch (error: any) {
       console.error("Error fetching user profile:", error.message);
     }
@@ -154,6 +162,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
       
       setProfile(null);
+      setIsSuperAdmin(false);
       navigate("/login");
     } catch (error: any) {
       toast({
@@ -202,6 +211,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         profile,
         isLoading,
+        isSuperAdmin,
         signUp,
         signIn,
         signOut,

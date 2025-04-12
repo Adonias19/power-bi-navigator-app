@@ -5,15 +5,33 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { NavigationCategory, NavigationItem } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useOrganizations } from "@/hooks/use-organizations";
+import { 
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuList,
+  NavigationMenuTrigger 
+} from "@/components/ui/navigation-menu";
+import { Building2 } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
   const { toast } = useToast();
+  const { organizations, fetchOrganizations, switchOrganization } = useOrganizations();
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch organizations for super admin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchOrganizations();
+    }
+  }, [isSuperAdmin, fetchOrganizations]);
 
   useEffect(() => {
     // Only fetch navigation when profile is loaded and we have an organization_id
@@ -49,7 +67,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         id: cat.id,
         name: cat.name,
         icon: cat.icon,
-        order: cat.order_index
+        order: cat.order_index,
+        items: [] // Add empty items array to satisfy the type
       }));
       
       const formattedItems: NavigationItem[] = items.map(item => ({
@@ -61,6 +80,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         categoryId: item.category_id,
         order: item.order_index
       }));
+      
+      // Group items by category
+      const categoriesWithItems = formattedCategories.map(category => {
+        return {
+          ...category,
+          items: formattedItems.filter(item => item.categoryId === category.id)
+        };
+      });
       
       // Save to localStorage for the sidebar to use
       localStorage.setItem('appNavigation', JSON.stringify({
@@ -83,11 +110,48 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
+  const handleSwitchOrganization = (orgId: string) => {
+    switchOrganization(orgId);
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto p-6">
-        {children}
+      <main className="flex-1 overflow-y-auto">
+        {isSuperAdmin && (
+          <div className="p-2 bg-powerbi-dark text-white">
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-powerbi-dark text-white hover:bg-powerbi-primary/80">
+                    <Building2 className="mr-2 h-4 w-4" />
+                    Organizations
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="bg-white p-2 rounded-md shadow-lg w-64">
+                    <div className="flex flex-col space-y-1">
+                      {organizations.map((org) => (
+                        <Button
+                          key={org.id}
+                          variant="ghost"
+                          className="justify-start text-left"
+                          onClick={() => handleSwitchOrganization(org.id)}
+                        >
+                          {org.name}
+                          {org.id === profile?.organization_id && (
+                            <span className="ml-2 text-xs text-green-500">(current)</span>
+                          )}
+                        </Button>
+                      ))}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+        )}
+        <div className="p-6">
+          {children}
+        </div>
       </main>
     </div>
   );

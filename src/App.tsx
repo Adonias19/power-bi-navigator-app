@@ -28,9 +28,14 @@ const App = () => (
             
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/dashboard/*" element={<Dashboard />} />
+              <Route path="/reports/*" element={<Reports />} />
+              <Route path="/settings/*" element={<Settings />} />
+            </Route>
+            
+            {/* Super Admin Routes */}
+            <Route element={<ProtectedRoute requireSuperAdmin={true} />}>
+              {/* Add any super admin specific routes here */}
             </Route>
             
             {/* Catch-all route */}

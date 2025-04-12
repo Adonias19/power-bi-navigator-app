@@ -14,5 +14,7 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     persistSession: true,
     storage: localStorage,
     autoRefreshToken: true,
+    debug: true,
+    flowType: 'implicit' // Disable email confirmation by setting implicit flow
   }
 });
