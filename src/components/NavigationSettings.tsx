@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { TrashIcon, PencilIcon, PlusIcon, GripVertical } from "lucide-react";
+import { TrashIcon, PencilIcon, PlusIcon, GripVertical, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 
 type NavItem = {
   id: string;
@@ -87,6 +87,23 @@ const NavigationSettings: React.FC = () => {
         description: "The new navigation item has been added successfully."
       });
     }
+  };
+
+  const handleMoveItem = (index: number, direction: 'up' | 'down') => {
+    const newItems = [...navItems];
+    if (direction === 'up' && index > 0) {
+      // Swap with the item above
+      [newItems[index], newItems[index - 1]] = [newItems[index - 1], newItems[index]];
+    } else if (direction === 'down' && index < navItems.length - 1) {
+      // Swap with the item below
+      [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+    }
+    setNavItems(newItems);
+    
+    toast({
+      title: "Navigation order updated",
+      description: "The item has been moved " + direction + "."
+    });
   };
 
   const handleSaveOrder = () => {
@@ -169,12 +186,31 @@ const NavigationSettings: React.FC = () => {
       )}
 
       <div className="space-y-4">
-        {navItems.map((item) => (
+        {navItems.map((item, index) => (
           <div 
             key={item.id}
             className="flex items-center gap-3 p-3 border border-gray-200 rounded-md"
           >
-            <GripVertical className="h-5 w-5 text-gray-400 cursor-move" />
+            <div className="flex space-x-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => handleMoveItem(index, 'up')}
+                disabled={index === 0}
+              >
+                <ArrowUpCircle className="h-5 w-5 text-gray-500" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={() => handleMoveItem(index, 'down')}
+                disabled={index === navItems.length - 1}
+              >
+                <ArrowDownCircle className="h-5 w-5 text-gray-500" />
+              </Button>
+            </div>
             
             {editingItem?.id === item.id ? (
               <div className="flex-1 grid grid-cols-2 gap-3">

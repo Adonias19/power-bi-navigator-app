@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
           id: "dashboard-embedded", 
           name: "Dashboard Report", 
           embedUrl: embedUrl,
-          description: "Embedded Power BI report" 
+          description: "" 
         }} />
       </div>
     </Layout>

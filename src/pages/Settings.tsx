@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserSettings from "@/components/UserSettings";
 import NavigationSettings from "@/components/NavigationSettings";
 import PowerBICredentials from "@/components/PowerBICredentials";
+import RLSSettings from "@/components/RLSSettings";
 
 const Settings: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const Settings: React.FC = () => {
             <TabsTrigger value="user">User Profile</TabsTrigger>
             <TabsTrigger value="navigation">Navigation</TabsTrigger>
             <TabsTrigger value="credentials">Power BI Credentials</TabsTrigger>
+            <TabsTrigger value="rls">Row Level Security</TabsTrigger>
           </TabsList>
           
           <TabsContent value="user">
@@ -29,6 +31,10 @@ const Settings: React.FC = () => {
           
           <TabsContent value="credentials">
             <PowerBICredentials />
+          </TabsContent>
+          
+          <TabsContent value="rls">
+            <RLSSettings />
           </TabsContent>
         </Tabs>
       </div>
