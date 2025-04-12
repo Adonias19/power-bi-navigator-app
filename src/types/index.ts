@@ -63,3 +63,29 @@ export interface ThemeSettings {
   darkMode: boolean;
   logo: string | null;
 }
+
+export interface NavigationCategory {
+  id: string;
+  name: string;
+  icon: string;
+  items: NavigationItem[];
+  order: number;
+}
+
+export interface NavigationItem {
+  id: string;
+  name: string;
+  path: string;
+  icon: string;
+  embedUrl: string;
+  categoryId: string;
+  order: number;
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  description: string;
+  members: string[]; // User IDs
+  navigationAccess: string[]; // Navigation Item IDs
+}

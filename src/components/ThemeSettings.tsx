@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Palette, Upload } from "lucide-react";
+import { ThemeSettings as ThemeSettingsType } from "@/types";
 
 const PRESET_COLORS = [
   { name: "Default Blue", primary: "#0078D4", secondary: "#00B7C3", accent: "#83B9F9" },
@@ -26,16 +27,73 @@ const FONT_OPTIONS = [
   { name: "Playfair Display", value: "'Playfair Display', serif" },
 ];
 
+// Load theme from localStorage or use defaults
+const loadSavedTheme = (): ThemeSettingsType => {
+  const savedTheme = localStorage.getItem('appTheme');
+  if (savedTheme) {
+    return JSON.parse(savedTheme);
+  }
+  return {
+    primaryColor: "#0078D4",
+    secondaryColor: "#00B7C3",
+    accentColor: "#83B9F9",
+    borderRadius: 8,
+    font: FONT_OPTIONS[0].value,
+    darkMode: false,
+    logo: null
+  };
+};
+
+// Apply theme to document
+const applyTheme = (theme: ThemeSettingsType) => {
+  document.documentElement.style.setProperty('--powerbi-primary', theme.primaryColor);
+  document.documentElement.style.setProperty('--powerbi-secondary', theme.secondaryColor);
+  document.documentElement.style.setProperty('--powerbi-accent', theme.accentColor);
+  
+  document.documentElement.style.setProperty('--radius', `${theme.borderRadius}px`);
+  document.documentElement.style.fontFamily = theme.font;
+  
+  if (theme.darkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+};
+
 const ThemeSettings: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("colors");
-  const [primaryColor, setPrimaryColor] = useState("#0078D4");
-  const [secondaryColor, setSecondaryColor] = useState("#00B7C3");
-  const [accentColor, setAccentColor] = useState("#83B9F9");
-  const [borderRadius, setBorderRadius] = useState([8]);
-  const [selectedFont, setSelectedFont] = useState(FONT_OPTIONS[0].value);
-  const [darkMode, setDarkMode] = useState(false);
-  const [logo, setLogo] = useState<string | null>(null);
+  const initialTheme = loadSavedTheme();
+  
+  const [primaryColor, setPrimaryColor] = useState(initialTheme.primaryColor);
+  const [secondaryColor, setSecondaryColor] = useState(initialTheme.secondaryColor);
+  const [accentColor, setAccentColor] = useState(initialTheme.accentColor);
+  const [borderRadius, setBorderRadius] = useState([initialTheme.borderRadius]);
+  const [selectedFont, setSelectedFont] = useState(initialTheme.font);
+  const [darkMode, setDarkMode] = useState(initialTheme.darkMode);
+  const [logo, setLogo] = useState<string | null>(initialTheme.logo);
+  const [previewChanges, setPreviewChanges] = useState(true);
+
+  // Apply theme on initial load
+  useEffect(() => {
+    applyTheme(initialTheme);
+  }, []);
+
+  // Apply theme changes in real-time if preview is enabled
+  useEffect(() => {
+    if (previewChanges) {
+      const currentTheme = {
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        borderRadius: borderRadius[0],
+        font: selectedFont,
+        darkMode,
+        logo
+      };
+      applyTheme(currentTheme);
+    }
+  }, [primaryColor, secondaryColor, accentColor, borderRadius, selectedFont, darkMode, logo, previewChanges]);
 
   const handlePresetSelect = (preset: typeof PRESET_COLORS[0]) => {
     setPrimaryColor(preset.primary);
@@ -49,8 +107,7 @@ const ThemeSettings: React.FC = () => {
   };
 
   const handleSaveTheme = () => {
-    // In a real app, this would save to localStorage or a backend
-    const themeSettings = {
+    const themeSettings: ThemeSettingsType = {
       primaryColor,
       secondaryColor,
       accentColor,
@@ -60,22 +117,15 @@ const ThemeSettings: React.FC = () => {
       logo
     };
     
-    console.log("Saving theme settings:", themeSettings);
+    // Save to localStorage
+    localStorage.setItem('appTheme', JSON.stringify(themeSettings));
     
-    // Apply theme changes
-    document.documentElement.style.setProperty('--powerbi-primary', primaryColor);
-    document.documentElement.style.setProperty('--powerbi-secondary', secondaryColor);
-    document.documentElement.style.setProperty('--powerbi-accent', accentColor);
-    
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Apply theme
+    applyTheme(themeSettings);
     
     toast({
       title: "Theme settings saved",
-      description: "Your theme changes have been applied successfully."
+      description: "Your theme changes have been applied and saved successfully."
     });
   };
 
@@ -97,6 +147,16 @@ const ThemeSettings: React.FC = () => {
           <Palette className="h-5 w-5 mr-2 text-powerbi-primary" />
           Theme Settings
         </h2>
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
+            <Switch 
+              id="previewChanges" 
+              checked={previewChanges}
+              onCheckedChange={setPreviewChanges}
+            />
+            <Label htmlFor="previewChanges">Preview changes</Label>
+          </div>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
