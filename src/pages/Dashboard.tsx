@@ -13,7 +13,7 @@ const Dashboard: React.FC = () => {
       <div className="h-[calc(100vh-80px)]">
         <ReportViewer report={{ 
           id: "dashboard-embedded", 
-          name: "Dashboard Report", 
+          name: "", // Remove name to ensure no title is displayed
           embedUrl: embedUrl,
           description: "" 
         }} />

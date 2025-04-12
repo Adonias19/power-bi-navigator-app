@@ -34,3 +34,32 @@ export interface PowerBICredentials {
   isConnected?: boolean;
   lastRefresh?: string;
 }
+
+export interface Client {
+  id: string;
+  name: string;
+  description: string;
+  userLimit: number;
+  currentUsers: number;
+  contactPerson: string;
+  email: string;
+}
+
+export interface PowerBICapacity {
+  id: string;
+  name: string;
+  capacityId: string;
+  workspaceId: string;
+  clientId: string;
+  assignedTo: string | null;
+}
+
+export interface ThemeSettings {
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  borderRadius: number;
+  font: string;
+  darkMode: boolean;
+  logo: string | null;
+}

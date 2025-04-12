@@ -14,6 +14,7 @@ const ReportDisplay: React.FC<ReportDisplayProps> = ({ report }) => {
     <div className="h-[calc(100vh-120px)] w-full">
       <ReportViewer report={{
         ...report,
+        // Remove name and description to ensure no titles are displayed
         name: "",
         description: ""
       }} />
