@@ -13,6 +13,7 @@ interface SidebarCategoryProps {
   collapsed: boolean;
   index: number;
   toggleCategory: (index: number) => void;
+  showEmbedUrl?: boolean;
 }
 
 export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
@@ -22,7 +23,8 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
   expanded,
   collapsed,
   index,
-  toggleCategory
+  toggleCategory,
+  showEmbedUrl = false
 }) => {
   return (
     <div className="mb-4">
@@ -64,9 +66,15 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
                 )
               }
               state={item.embedUrl ? { embedUrl: item.embedUrl } : undefined}
+              end={true}
             >
               {item.icon}
-              <span>{item.name}</span>
+              <span className="flex-1">{item.name}</span>
+              {showEmbedUrl && item.embedUrl && (
+                <span className="text-xs text-gray-400 truncate max-w-32" title={item.embedUrl}>
+                  {item.embedUrl.substring(0, 20)}...
+                </span>
+              )}
             </NavLink>
           ))}
         </div>
@@ -89,6 +97,7 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
               }
               title={item.name}
               state={item.embedUrl ? { embedUrl: item.embedUrl } : undefined}
+              end={true}
             >
               <div className="flex items-center">
                 {item.icon}

@@ -81,14 +81,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         order: item.order_index
       }));
       
-      // Group items by category
-      const categoriesWithItems = formattedCategories.map(category => {
-        return {
-          ...category,
-          items: formattedItems.filter(item => item.categoryId === category.id)
-        };
-      });
-      
       // Save to localStorage for the sidebar to use
       localStorage.setItem('appNavigation', JSON.stringify({
         categories: formattedCategories,
@@ -127,7 +119,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     <Building2 className="mr-2 h-4 w-4" />
                     Organizations
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="bg-white p-2 rounded-md shadow-lg w-64">
+                  <NavigationMenuContent className="bg-white p-2 rounded-md shadow-lg w-64 z-50">
                     <div className="flex flex-col space-y-1">
                       {organizations.map((org) => (
                         <Button
@@ -149,7 +141,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </NavigationMenu>
           </div>
         )}
-        <div className="p-6">
+        <div className="p-6 h-[calc(100vh-60px)]">
           {children}
         </div>
       </main>

@@ -24,6 +24,7 @@ const iconMap: Record<string, React.ReactNode> = {
   BookOpen: <LucideIcons.BookOpen className="h-5 w-5" />,
   Settings: <LucideIcons.Settings className="h-5 w-5" />,
   FolderIcon: <LucideIcons.FolderIcon className="h-5 w-5" />,
+  Building2: <LucideIcons.Building2 className="h-5 w-5" />,
 };
 
 // Function to get icon from map or default

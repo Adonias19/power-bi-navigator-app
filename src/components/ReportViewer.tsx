@@ -19,8 +19,8 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ report }) => {
   }
 
   return (
-    <Card className="w-full h-full overflow-hidden border border-gray-200">
-      <CardContent className="p-0 h-full">
+    <Card className="w-full h-[calc(100vh-9rem)] overflow-hidden border border-gray-200">
+      <CardContent className="p-0 h-full w-full">
         {isLoading && (
           <div className="h-full w-full flex items-center justify-center bg-gray-100">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-powerbi-primary"></div>
@@ -31,7 +31,12 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ report }) => {
           src={report.embedUrl}
           className="w-full h-full border-0"
           onLoad={() => setIsLoading(false)}
-          style={{ display: isLoading ? "none" : "block" }}
+          style={{ 
+            display: isLoading ? "none" : "block",
+            width: "100%",
+            height: "100%",
+            border: "none"
+          }}
           frameBorder="0"
           allowFullScreen
         ></iframe>

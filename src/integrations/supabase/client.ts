@@ -18,3 +18,43 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     flowType: 'implicit' // Disable email confirmation by setting implicit flow
   }
 });
+
+// Create a test user (only in development)
+if (import.meta.env.DEV) {
+  // Check if the user already exists
+  const checkUser = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'adonikelias@gmail.com',
+        password: 'Adonik123',
+      });
+      
+      if (error && error.message.includes('Invalid login credentials')) {
+        // If the user doesn't exist, create it
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: 'adonikelias@gmail.com',
+          password: 'Adonik123',
+          options: {
+            data: {
+              name: 'Adonik Elias',
+            }
+          }
+        });
+        
+        if (signUpError) {
+          console.error('Error creating test user:', signUpError);
+        } else {
+          console.log('Test user created successfully');
+        }
+      } else if (!error) {
+        // Sign out after checking
+        await supabase.auth.signOut();
+      }
+    } catch (err) {
+      console.error('Error checking test user:', err);
+    }
+  };
+  
+  // Run the check but don't block the app initialization
+  checkUser();
+}
