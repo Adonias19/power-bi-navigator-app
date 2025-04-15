@@ -1,6 +1,6 @@
 
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NavItem } from "./types";
@@ -26,6 +26,8 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
   toggleCategory,
   showEmbedUrl = false
 }) => {
+  const location = useLocation();
+  
   return (
     <div className="mb-4">
       <div 
@@ -70,7 +72,7 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
             >
               {item.icon}
               <span className="flex-1">{item.name}</span>
-              {showEmbedUrl && item.embedUrl && (
+              {showEmbedUrl && item.embedUrl && false && ( // Set to false to hide the embed URL
                 <span className="text-xs text-gray-400 truncate max-w-32" title={item.embedUrl}>
                   {item.embedUrl.substring(0, 20)}...
                 </span>

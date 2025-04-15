@@ -35,10 +35,12 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ report }) => {
             display: isLoading ? "none" : "block",
             width: "100%",
             height: "100%",
-            border: "none"
+            border: "none",
+            overflow: "hidden"
           }}
           frameBorder="0"
           allowFullScreen
+          scrolling="no"
         ></iframe>
       </CardContent>
     </Card>
