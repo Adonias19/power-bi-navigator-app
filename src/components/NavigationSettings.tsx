@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -337,8 +338,18 @@ const NavigationSettings: React.FC = () => {
         const cat2 = newCategories[index - 1];
         
         const updates = [
-          { id: cat1.id, order_index: cat1.order },
-          { id: cat2.id, order_index: cat2.order }
+          { 
+            id: cat1.id, 
+            name: cat1.name,
+            icon: cat1.icon,
+            order_index: cat1.order 
+          },
+          { 
+            id: cat2.id, 
+            name: cat2.name,
+            icon: cat2.icon,
+            order_index: cat2.order 
+          }
         ];
         
         const { error } = await supabase
@@ -364,8 +375,18 @@ const NavigationSettings: React.FC = () => {
         const cat2 = newCategories[index + 1];
         
         const updates = [
-          { id: cat1.id, order_index: cat1.order },
-          { id: cat2.id, order_index: cat2.order }
+          { 
+            id: cat1.id, 
+            name: cat1.name,
+            icon: cat1.icon,
+            order_index: cat1.order 
+          },
+          { 
+            id: cat2.id, 
+            name: cat2.name,
+            icon: cat2.icon,
+            order_index: cat2.order 
+          }
         ];
         
         const { error } = await supabase
@@ -530,8 +551,24 @@ const NavigationSettings: React.FC = () => {
         
         try {
           const updates = [
-            { id: currentItem.id, order_index: newItems[currentItemIndex].order },
-            { id: prevItem.id, order_index: newItems[prevItemIndex].order }
+            { 
+              id: currentItem.id, 
+              name: currentItem.name,
+              path: currentItem.path,
+              icon: currentItem.icon,
+              embed_url: currentItem.embedUrl,
+              category_id: currentItem.categoryId,
+              order_index: newItems[currentItemIndex].order 
+            },
+            { 
+              id: prevItem.id, 
+              name: prevItem.name,
+              path: prevItem.path,
+              icon: prevItem.icon,
+              embed_url: prevItem.embedUrl,
+              category_id: prevItem.categoryId,
+              order_index: newItems[prevItemIndex].order 
+            }
           ];
           
           const { error } = await supabase
@@ -562,8 +599,24 @@ const NavigationSettings: React.FC = () => {
         
         try {
           const updates = [
-            { id: currentItem.id, order_index: newItems[currentItemIndex].order },
-            { id: nextItem.id, order_index: newItems[nextItemIndex].order }
+            { 
+              id: currentItem.id, 
+              name: currentItem.name,
+              path: currentItem.path,
+              icon: currentItem.icon,
+              embed_url: currentItem.embedUrl,
+              category_id: currentItem.categoryId,
+              order_index: newItems[currentItemIndex].order 
+            },
+            { 
+              id: nextItem.id, 
+              name: nextItem.name,
+              path: nextItem.path,
+              icon: nextItem.icon,
+              embed_url: nextItem.embedUrl,
+              category_id: nextItem.categoryId,
+              order_index: newItems[nextItemIndex].order 
+            }
           ];
           
           const { error } = await supabase
