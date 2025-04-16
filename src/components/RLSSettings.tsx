@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -16,6 +15,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { PlusIcon, TrashIcon, UserPlus, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Team = {
   id: string;
@@ -69,12 +69,116 @@ const RLSSettings: React.FC = () => {
     { id: "5", name: "Michael Brown", email: "michael@example.com" }
   ]);
   
+  // Load teams and users from database on mount
+  useEffect(() => {
+    const fetchTeamsAndUsers = async () => {
+      try {
+        // Fetch teams
+        const { data: teamData, error: teamError } = await supabase
+          .from('teams')
+          .select('*');
+        
+        if (teamError) throw teamError;
+        
+        if (teamData && teamData.length > 0) {
+          // Transform team data and load team members and access
+          const transformedTeams = await Promise.all(teamData.map(async (team) => {
+            // Get team members
+            const { data: memberData, error: memberError } = await supabase
+              .from('team_members')
+              .select(`
+                user_id,
+                profiles:user_id (id, name, email)
+              `)
+              .eq('team_id', team.id);
+            
+            if (memberError) throw memberError;
+            
+            // Get team report access
+            const { data: accessData, error: accessError } = await supabase
+              .from('team_nav_access')
+              .select('nav_item_id')
+              .eq('team_id', team.id);
+            
+            if (accessError) throw accessError;
+            
+            // Transform members and access data
+            const members = memberData?.map(member => ({
+              id: member.profiles.id,
+              name: member.profiles.name || member.profiles.email,
+              email: member.profiles.email
+            })) || [];
+            
+            const reportAccess = accessData?.map(access => access.nav_item_id) || [];
+            
+            return {
+              id: team.id,
+              name: team.name,
+              members,
+              reportAccess
+            };
+          }));
+          
+          setTeams(transformedTeams);
+        }
+        
+        // Fetch users (from profiles table)
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('id, name, email');
+        
+        if (userError) throw userError;
+        
+        if (userData && userData.length > 0) {
+          const transformedUsers = userData.map(user => ({
+            id: user.id,
+            name: user.name || user.email,
+            email: user.email
+          }));
+          
+          setUsers(transformedUsers);
+        }
+        
+      } catch (error) {
+        console.error("Error fetching teams and users:", error);
+        toast({
+          title: "Error loading data",
+          description: "There was an error loading teams and users.",
+          variant: "destructive"
+        });
+      }
+    };
+    
+    fetchTeamsAndUsers();
+  }, [toast]);
+  
   const reportOptions = [
     { id: "nav1", name: "Sales Dashboard" },
     { id: "nav2", name: "Marketing Analysis" },
     { id: "nav3", name: "Financial Reports" },
     { id: "nav4", name: "Customer Insights" }
   ];
+  
+  // Load report options from nav_items
+  useEffect(() => {
+    const fetchReportOptions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('nav_items')
+          .select('id, name');
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // We'll implement this later
+        }
+      } catch (error) {
+        console.error("Error fetching report options:", error);
+      }
+    };
+    
+    fetchReportOptions();
+  }, []);
   
   const [newTeam, setNewTeam] = useState({
     name: "",
@@ -89,121 +193,297 @@ const RLSSettings: React.FC = () => {
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   
-  const handleAddTeam = () => {
+  const handleAddTeam = async () => {
     if (newTeam.name) {
-      const team: Team = {
-        id: (teams.length + 1).toString(),
-        name: newTeam.name,
-        members: [],
-        reportAccess: newTeam.reportAccess
-      };
-      
-      setTeams([...teams, team]);
-      setNewTeam({ name: "", reportAccess: [] });
-      
-      toast({
-        title: "Team created",
-        description: `${team.name} has been created successfully.`
-      });
+      try {
+        // Add to database
+        const { data, error } = await supabase
+          .from('teams')
+          .insert({
+            name: newTeam.name,
+            description: `Team ${newTeam.name}`
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        if (data && data[0]) {
+          const team: Team = {
+            id: data[0].id,
+            name: data[0].name,
+            members: [],
+            reportAccess: []
+          };
+          
+          setTeams([...teams, team]);
+          setNewTeam({ name: "", reportAccess: [] });
+          
+          toast({
+            title: "Team created",
+            description: `${team.name} has been created successfully.`
+          });
+        }
+      } catch (error) {
+        console.error("Error creating team:", error);
+        toast({
+          title: "Error creating team",
+          description: "There was an error saving to the database.",
+          variant: "destructive"
+        });
+      }
     }
   };
   
-  const handleAddUser = () => {
+  const handleAddUser = async () => {
     if (newUser.name && newUser.email) {
-      const user: User = {
-        id: (users.length + 1).toString(),
-        name: newUser.name,
-        email: newUser.email
-      };
+      try {
+        // Check if user with this email already exists in auth
+        const { data: existingUsers, error: checkError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', newUser.email);
+        
+        if (checkError) throw checkError;
+        
+        let userId;
+        
+        if (existingUsers && existingUsers.length > 0) {
+          // User exists, use their ID
+          userId = existingUsers[0].id;
+        } else {
+          // Create new user in auth (this would typically be done through auth API)
+          // For this example, we'll just add to profiles table
+          const { data, error } = await supabase
+            .from('profiles')
+            .insert({
+              email: newUser.email,
+              name: newUser.name
+            })
+            .select();
+          
+          if (error) throw error;
+          
+          if (data && data[0]) {
+            userId = data[0].id;
+          }
+        }
+        
+        if (userId) {
+          const user: User = {
+            id: userId,
+            name: newUser.name,
+            email: newUser.email
+          };
+          
+          setUsers([...users, user]);
+          setNewUser({ name: "", email: "" });
+          
+          toast({
+            title: "User added",
+            description: `${user.name} has been added successfully.`
+          });
+        }
+      } catch (error) {
+        console.error("Error adding user:", error);
+        toast({
+          title: "Error adding user",
+          description: "There was an error saving to the database.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+  
+  const handleAddUserToTeam = async (teamId: string, userId: string) => {
+    try {
+      // Add to database
+      const { error } = await supabase
+        .from('team_members')
+        .insert({
+          team_id: teamId,
+          user_id: userId
+        });
       
-      setUsers([...users, user]);
-      setNewUser({ name: "", email: "" });
+      if (error) throw error;
+      
+      // Update state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId) {
+          const userToAdd = users.find(u => u.id === userId);
+          if (userToAdd && !team.members.some(m => m.id === userId)) {
+            return {
+              ...team,
+              members: [...team.members, userToAdd]
+            };
+          }
+        }
+        return team;
+      }));
       
       toast({
-        title: "User added",
-        description: `${user.name} has been added successfully.`
+        title: "User added to team",
+        description: "The user has been added to the team."
+      });
+    } catch (error) {
+      console.error("Error adding user to team:", error);
+      toast({
+        title: "Error adding user to team",
+        description: "There was an error saving to the database.",
+        variant: "destructive"
       });
     }
   };
   
-  const handleAddUserToTeam = (teamId: string, userId: string) => {
-    setTeams(prev => prev.map(team => {
-      if (team.id === teamId) {
-        const userToAdd = users.find(u => u.id === userId);
-        if (userToAdd && !team.members.some(m => m.id === userId)) {
+  const handleRemoveUserFromTeam = async (teamId: string, userId: string) => {
+    try {
+      // Remove from database
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('team_id', teamId)
+        .eq('user_id', userId);
+      
+      if (error) throw error;
+      
+      // Update state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId) {
           return {
             ...team,
-            members: [...team.members, userToAdd]
+            members: team.members.filter(m => m.id !== userId)
           };
         }
-      }
-      return team;
-    }));
-    
-    toast({
-      title: "User added to team",
-      description: "The user has been added to the team."
-    });
+        return team;
+      }));
+      
+      toast({
+        title: "User removed from team",
+        description: "The user has been removed from the team."
+      });
+    } catch (error) {
+      console.error("Error removing user from team:", error);
+      toast({
+        title: "Error removing user from team",
+        description: "There was an error updating the database.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const handleRemoveUserFromTeam = (teamId: string, userId: string) => {
-    setTeams(prev => prev.map(team => {
-      if (team.id === teamId) {
-        return {
-          ...team,
-          members: team.members.filter(m => m.id !== userId)
-        };
-      }
-      return team;
-    }));
-    
-    toast({
-      title: "User removed from team",
-      description: "The user has been removed from the team."
-    });
+  const handleAddReportAccess = async (teamId: string, reportId: string) => {
+    try {
+      // Add to database
+      const { error } = await supabase
+        .from('team_nav_access')
+        .insert({
+          team_id: teamId,
+          nav_item_id: reportId
+        });
+      
+      if (error) throw error;
+      
+      // Update state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId && !team.reportAccess.includes(reportId)) {
+          return {
+            ...team,
+            reportAccess: [...team.reportAccess, reportId]
+          };
+        }
+        return team;
+      }));
+      
+      toast({
+        title: "Report access granted",
+        description: "The team now has access to this report."
+      });
+    } catch (error) {
+      console.error("Error adding report access:", error);
+      toast({
+        title: "Error adding report access",
+        description: "There was an error saving to the database.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const handleAddReportAccess = (teamId: string, reportId: string) => {
-    setTeams(prev => prev.map(team => {
-      if (team.id === teamId && !team.reportAccess.includes(reportId)) {
-        return {
-          ...team,
-          reportAccess: [...team.reportAccess, reportId]
-        };
-      }
-      return team;
-    }));
-    
-    toast({
-      title: "Report access granted",
-      description: "The team now has access to this report."
-    });
+  const handleRemoveReportAccess = async (teamId: string, reportId: string) => {
+    try {
+      // Remove from database
+      const { error } = await supabase
+        .from('team_nav_access')
+        .delete()
+        .eq('team_id', teamId)
+        .eq('nav_item_id', reportId);
+      
+      if (error) throw error;
+      
+      // Update state
+      setTeams(prev => prev.map(team => {
+        if (team.id === teamId) {
+          return {
+            ...team,
+            reportAccess: team.reportAccess.filter(r => r !== reportId)
+          };
+        }
+        return team;
+      }));
+      
+      toast({
+        title: "Report access removed",
+        description: "The team no longer has access to this report."
+      });
+    } catch (error) {
+      console.error("Error removing report access:", error);
+      toast({
+        title: "Error removing report access",
+        description: "There was an error updating the database.",
+        variant: "destructive"
+      });
+    }
   };
   
-  const handleRemoveReportAccess = (teamId: string, reportId: string) => {
-    setTeams(prev => prev.map(team => {
-      if (team.id === teamId) {
-        return {
-          ...team,
-          reportAccess: team.reportAccess.filter(r => r !== reportId)
-        };
-      }
-      return team;
-    }));
-    
-    toast({
-      title: "Report access removed",
-      description: "The team no longer has access to this report."
-    });
-  };
-  
-  const handleDeleteTeam = (teamId: string) => {
-    setTeams(prev => prev.filter(team => team.id !== teamId));
-    
-    toast({
-      title: "Team deleted",
-      description: "The team has been deleted successfully."
-    });
+  const handleDeleteTeam = async (teamId: string) => {
+    try {
+      // Delete team members first (foreign key constraint)
+      const { error: membersError } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('team_id', teamId);
+      
+      if (membersError) throw membersError;
+      
+      // Delete team access records
+      const { error: accessError } = await supabase
+        .from('team_nav_access')
+        .delete()
+        .eq('team_id', teamId);
+      
+      if (accessError) throw accessError;
+      
+      // Delete the team
+      const { error } = await supabase
+        .from('teams')
+        .delete()
+        .eq('id', teamId);
+      
+      if (error) throw error;
+      
+      // Update state
+      setTeams(prev => prev.filter(team => team.id !== teamId));
+      
+      toast({
+        title: "Team deleted",
+        description: "The team has been deleted successfully."
+      });
+    } catch (error) {
+      console.error("Error deleting team:", error);
+      toast({
+        title: "Error deleting team",
+        description: "There was an error deleting from the database.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

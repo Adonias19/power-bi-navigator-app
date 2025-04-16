@@ -29,7 +29,7 @@ export const SidebarCategory: React.FC<SidebarCategoryProps> = ({
   return (
     <div className="mb-4">
       <div 
-        className="flex items-center px-4 py-2 text-gray-300 justify-between"
+        className="flex items-center px-4 py-2 text-gray-300 justify-between cursor-pointer"
         onClick={() => toggleCategory(index)}
       >
         <div className="flex items-center">

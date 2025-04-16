@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,8 +27,8 @@ import { NavigationCategory, NavigationItem } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 
-// Available icons for selection
 const AVAILABLE_ICONS = [
   { name: "LayoutDashboard", label: "Dashboard", component: <LayoutDashboard className="h-4 w-4" /> },
   { name: "BarChart3", label: "Bar Chart", component: <BarChart3 className="h-4 w-4" /> },
@@ -39,20 +38,17 @@ const AVAILABLE_ICONS = [
   { name: "FolderIcon", label: "Folder", component: <FolderIcon className="h-4 w-4" /> },
 ];
 
-// Helper function to get icon component by name
 const getIconByName = (name: string) => {
   const icon = AVAILABLE_ICONS.find(icon => icon.name === name);
   return icon ? icon.component : <LayoutDashboard className="h-4 w-4" />;
 };
 
-// Load saved navigation from localStorage or use defaults
 const loadSavedNavigation = (): { categories: NavigationCategory[], items: NavigationItem[] } => {
   const savedNav = localStorage.getItem('appNavigation');
   if (savedNav) {
     return JSON.parse(savedNav);
   }
   
-  // Default navigation data
   return {
     categories: [
       { id: "cat1", name: "Dashboards", icon: "FolderIcon", items: [], order: 0 },
@@ -71,16 +67,13 @@ const NavigationSettings: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("categories");
   
-  // Load navigation data
   const initialNav = loadSavedNavigation();
   const [categories, setCategories] = useState<NavigationCategory[]>(initialNav.categories);
   const [items, setItems] = useState<NavigationItem[]>(initialNav.items);
   
-  // State for editing
   const [editingCategory, setEditingCategory] = useState<NavigationCategory | null>(null);
   const [editingItem, setEditingItem] = useState<NavigationItem | null>(null);
   
-  // State for adding new
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [newCategory, setNewCategory] = useState<Omit<NavigationCategory, 'id' | 'items' | 'order'>>({
@@ -95,18 +88,71 @@ const NavigationSettings: React.FC = () => {
     categoryId: categories[0]?.id || ""
   });
 
-  // Sort categories and items by order
+  useEffect(() => {
+    const loadNavigationFromDB = async () => {
+      try {
+        const { data: dbCategories, error: catError } = await supabase
+          .from('nav_categories')
+          .select('*')
+          .order('order_index');
+        
+        if (catError) throw catError;
+        
+        const { data: dbItems, error: itemsError } = await supabase
+          .from('nav_items')
+          .select('*')
+          .order('order_index');
+        
+        if (itemsError) throw itemsError;
+        
+        const transformedCategories = dbCategories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.icon,
+          order: cat.order_index,
+          items: []
+        }));
+        
+        const transformedItems = dbItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          path: item.path,
+          icon: item.icon,
+          embedUrl: item.embed_url,
+          categoryId: item.category_id,
+          order: item.order_index
+        }));
+        
+        if (transformedCategories.length > 0) {
+          setCategories(transformedCategories);
+          setNewItem(prev => ({
+            ...prev,
+            categoryId: transformedCategories[0]?.id || ""
+          }));
+        }
+        
+        if (transformedItems.length > 0) {
+          setItems(transformedItems);
+        }
+      } catch (error) {
+        console.error("Error loading navigation from database:", error);
+        setCategories(initialNav.categories);
+        setItems(initialNav.items);
+      }
+    };
+    
+    loadNavigationFromDB();
+  }, []);
+
   const sortedCategories = [...categories].sort((a, b) => a.order - b.order);
   
-  // Get items for a specific category, sorted by order
   const getItemsForCategory = (categoryId: string) => {
     return items
       .filter(item => item.categoryId === categoryId)
       .sort((a, b) => a.order - b.order);
   };
 
-  // Save navigation to localStorage and apply changes
-  const saveNavigation = () => {
+  const saveNavigation = async () => {
     const navigationData = {
       categories,
       items
@@ -114,36 +160,99 @@ const NavigationSettings: React.FC = () => {
     
     localStorage.setItem('appNavigation', JSON.stringify(navigationData));
     
-    toast({
-      title: "Navigation settings saved",
-      description: "Your navigation changes have been saved successfully."
-    });
+    window.dispatchEvent(new Event('storage'));
+    
+    try {
+      const categoriesForDB = categories.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        order_index: cat.order,
+      }));
+      
+      const itemsForDB = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        path: item.path,
+        icon: item.icon,
+        embed_url: item.embedUrl,
+        category_id: item.categoryId,
+        order_index: item.order,
+      }));
+      
+      const { error: catError } = await supabase
+        .from('nav_categories')
+        .upsert(categoriesForDB, { onConflict: 'id' });
+      
+      if (catError) throw catError;
+      
+      const { error: itemError } = await supabase
+        .from('nav_items')
+        .upsert(itemsForDB, { onConflict: 'id' });
+      
+      if (itemError) throw itemError;
+      
+      toast({
+        title: "Navigation settings saved",
+        description: "Your navigation changes have been saved to the database."
+      });
+    } catch (error) {
+      console.error("Error saving navigation to database:", error);
+      toast({
+        title: "Error saving to database",
+        description: "Changes were saved locally but not to the database.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Category handlers
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategory.name) {
       const newId = `cat${Date.now()}`;
       const newCategoryWithId: NavigationCategory = {
         id: newId,
         ...newCategory,
         items: [],
-        order: categories.length // Add at the end
+        order: categories.length
       };
       
-      setCategories(prev => [...prev, newCategoryWithId]);
-      setNewCategory({ name: "", icon: "FolderIcon" });
-      setIsAddingCategory(false);
-      
-      toast({
-        title: "Category added",
-        description: `Category "${newCategory.name}" has been added successfully.`
-      });
+      try {
+        const { data, error } = await supabase
+          .from('nav_categories')
+          .insert({
+            id: newId,
+            name: newCategory.name,
+            icon: newCategory.icon,
+            order_index: categories.length
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        if (data && data[0]) {
+          newCategoryWithId.id = data[0].id;
+        }
+        
+        setCategories(prev => [...prev, newCategoryWithId]);
+        setNewCategory({ name: "", icon: "FolderIcon" });
+        setIsAddingCategory(false);
+        
+        toast({
+          title: "Category added",
+          description: `Category "${newCategory.name}" has been added successfully.`
+        });
+      } catch (error) {
+        console.error("Error adding category to database:", error);
+        toast({
+          title: "Error adding category",
+          description: "There was an error saving to the database.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
-  const handleRemoveCategory = (id: string) => {
-    // Check if category has items
+  const handleRemoveCategory = async (id: string) => {
     const categoryItems = items.filter(item => item.categoryId === id);
     if (categoryItems.length > 0) {
       toast({
@@ -154,45 +263,124 @@ const NavigationSettings: React.FC = () => {
       return;
     }
     
-    setCategories(prev => prev.filter(cat => cat.id !== id));
-    
-    toast({
-      title: "Category removed",
-      description: "The category has been removed successfully."
-    });
+    try {
+      const { error } = await supabase
+        .from('nav_categories')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+      
+      toast({
+        title: "Category removed",
+        description: "The category has been removed successfully."
+      });
+    } catch (error) {
+      console.error("Error deleting category from database:", error);
+      toast({
+        title: "Error deleting category",
+        description: "There was an error deleting from the database.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditCategory = (category: NavigationCategory) => {
     setEditingCategory(category);
   };
 
-  const handleSaveEditCategory = () => {
+  const handleSaveEditCategory = async () => {
     if (editingCategory) {
-      setCategories(prev => 
-        prev.map(cat => cat.id === editingCategory.id ? editingCategory : cat)
-      );
-      setEditingCategory(null);
-      
-      toast({
-        title: "Category updated",
-        description: "The category has been updated successfully."
-      });
+      try {
+        const { error } = await supabase
+          .from('nav_categories')
+          .update({
+            name: editingCategory.name,
+            icon: editingCategory.icon
+          })
+          .eq('id', editingCategory.id);
+        
+        if (error) throw error;
+        
+        setCategories(prev => 
+          prev.map(cat => cat.id === editingCategory.id ? editingCategory : cat)
+        );
+        setEditingCategory(null);
+        
+        toast({
+          title: "Category updated",
+          description: "The category has been updated successfully."
+        });
+      } catch (error) {
+        console.error("Error updating category in database:", error);
+        toast({
+          title: "Error updating category",
+          description: "There was an error updating in the database.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
-  const handleMoveCategory = (index: number, direction: 'up' | 'down') => {
+  const handleMoveCategory = async (index: number, direction: 'up' | 'down') => {
     const newCategories = [...sortedCategories];
     
     if (direction === 'up' && index > 0) {
-      // Update orders
       const currentOrder = newCategories[index].order;
       newCategories[index].order = newCategories[index - 1].order;
       newCategories[index - 1].order = currentOrder;
+      
+      try {
+        const cat1 = newCategories[index];
+        const cat2 = newCategories[index - 1];
+        
+        const updates = [
+          { id: cat1.id, order_index: cat1.order },
+          { id: cat2.id, order_index: cat2.order }
+        ];
+        
+        const { error } = await supabase
+          .from('nav_categories')
+          .upsert(updates, { onConflict: 'id' });
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error("Error updating category order in database:", error);
+        toast({
+          title: "Error updating order",
+          description: "Changes were saved locally but not to the database.",
+          variant: "destructive"
+        });
+      }
     } else if (direction === 'down' && index < categories.length - 1) {
-      // Update orders
       const currentOrder = newCategories[index].order;
       newCategories[index].order = newCategories[index + 1].order;
       newCategories[index + 1].order = currentOrder;
+      
+      try {
+        const cat1 = newCategories[index];
+        const cat2 = newCategories[index + 1];
+        
+        const updates = [
+          { id: cat1.id, order_index: cat1.order },
+          { id: cat2.id, order_index: cat2.order }
+        ];
+        
+        const { error } = await supabase
+          .from('nav_categories')
+          .upsert(updates, { onConflict: 'id' });
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error("Error updating category order in database:", error);
+        toast({
+          title: "Error updating order",
+          description: "Changes were saved locally but not to the database.",
+          variant: "destructive"
+        });
+      }
     }
     
     setCategories(newCategories);
@@ -203,8 +391,7 @@ const NavigationSettings: React.FC = () => {
     });
   };
 
-  // Item handlers
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (newItem.name && newItem.path && newItem.categoryId) {
       const newId = `item${Date.now()}`;
       const categoryItems = getItemsForCategory(newItem.categoryId);
@@ -212,63 +399,127 @@ const NavigationSettings: React.FC = () => {
       const newItemWithId: NavigationItem = {
         id: newId,
         ...newItem,
-        order: categoryItems.length // Add at the end of the category
+        order: categoryItems.length
       };
       
-      setItems(prev => [...prev, newItemWithId]);
-      setNewItem({
-        name: "",
-        path: "",
-        icon: "LayoutDashboard",
-        embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
-        categoryId: newItem.categoryId
-      });
-      setIsAddingItem(false);
-      
-      toast({
-        title: "Navigation item added",
-        description: `Item "${newItem.name}" has been added successfully.`
-      });
+      try {
+        const { data, error } = await supabase
+          .from('nav_items')
+          .insert({
+            id: newId,
+            name: newItem.name,
+            path: newItem.path,
+            icon: newItem.icon,
+            embed_url: newItem.embedUrl,
+            category_id: newItem.categoryId,
+            order_index: categoryItems.length
+          })
+          .select();
+        
+        if (error) throw error;
+        
+        if (data && data[0]) {
+          newItemWithId.id = data[0].id;
+        }
+        
+        setItems(prev => [...prev, newItemWithId]);
+        setNewItem({
+          name: "",
+          path: "",
+          icon: "LayoutDashboard",
+          embedUrl: "https://playground.powerbi.com/sampleReportEmbed",
+          categoryId: newItem.categoryId
+        });
+        setIsAddingItem(false);
+        
+        toast({
+          title: "Navigation item added",
+          description: `Item "${newItem.name}" has been added successfully.`
+        });
+      } catch (error) {
+        console.error("Error adding item to database:", error);
+        toast({
+          title: "Error adding item",
+          description: "There was an error saving to the database.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
-  const handleRemoveItem = (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
-    
-    toast({
-      title: "Navigation item removed",
-      description: "The navigation item has been removed successfully."
-    });
+  const handleRemoveItem = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('nav_items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      setItems(prev => prev.filter(item => item.id !== id));
+      
+      toast({
+        title: "Navigation item removed",
+        description: "The navigation item has been removed successfully."
+      });
+    } catch (error) {
+      console.error("Error deleting item from database:", error);
+      toast({
+        title: "Error deleting item",
+        description: "There was an error deleting from the database.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEditItem = (item: NavigationItem) => {
     setEditingItem(item);
   };
 
-  const handleSaveEditItem = () => {
+  const handleSaveEditItem = async () => {
     if (editingItem) {
-      setItems(prev => 
-        prev.map(item => item.id === editingItem.id ? editingItem : item)
-      );
-      setEditingItem(null);
-      
-      toast({
-        title: "Navigation item updated",
-        description: "The navigation item has been updated successfully."
-      });
+      try {
+        const { error } = await supabase
+          .from('nav_items')
+          .update({
+            name: editingItem.name,
+            path: editingItem.path,
+            icon: editingItem.icon,
+            embed_url: editingItem.embedUrl,
+            category_id: editingItem.categoryId
+          })
+          .eq('id', editingItem.id);
+        
+        if (error) throw error;
+        
+        setItems(prev => 
+          prev.map(item => item.id === editingItem.id ? editingItem : item)
+        );
+        setEditingItem(null);
+        
+        toast({
+          title: "Navigation item updated",
+          description: "The navigation item has been updated successfully."
+        });
+      } catch (error) {
+        console.error("Error updating item in database:", error);
+        toast({
+          title: "Error updating item",
+          description: "There was an error updating in the database.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
-  const handleMoveItem = (categoryId: string, itemIndex: number, direction: 'up' | 'down') => {
+  const handleMoveItem = async (categoryId: string, itemIndex: number, direction: 'up' | 'down') => {
     const categoryItems = getItemsForCategory(categoryId);
     const newItems = [...items];
     
     if (direction === 'up' && itemIndex > 0) {
-      // Update orders
       const currentItem = categoryItems[itemIndex];
       const prevItem = categoryItems[itemIndex - 1];
       
-      // Find these items in the main items array and swap their orders
       const currentItemIndex = newItems.findIndex(item => item.id === currentItem.id);
       const prevItemIndex = newItems.findIndex(item => item.id === prevItem.id);
       
@@ -276,13 +527,31 @@ const NavigationSettings: React.FC = () => {
         const tempOrder = newItems[currentItemIndex].order;
         newItems[currentItemIndex].order = newItems[prevItemIndex].order;
         newItems[prevItemIndex].order = tempOrder;
+        
+        try {
+          const updates = [
+            { id: currentItem.id, order_index: newItems[currentItemIndex].order },
+            { id: prevItem.id, order_index: newItems[prevItemIndex].order }
+          ];
+          
+          const { error } = await supabase
+            .from('nav_items')
+            .upsert(updates, { onConflict: 'id' });
+          
+          if (error) throw error;
+        } catch (error) {
+          console.error("Error updating item order in database:", error);
+          toast({
+            title: "Error updating order",
+            description: "Changes were saved locally but not to the database.",
+            variant: "destructive"
+          });
+        }
       }
     } else if (direction === 'down' && itemIndex < categoryItems.length - 1) {
-      // Update orders
       const currentItem = categoryItems[itemIndex];
       const nextItem = categoryItems[itemIndex + 1];
       
-      // Find these items in the main items array and swap their orders
       const currentItemIndex = newItems.findIndex(item => item.id === currentItem.id);
       const nextItemIndex = newItems.findIndex(item => item.id === nextItem.id);
       
@@ -290,6 +559,26 @@ const NavigationSettings: React.FC = () => {
         const tempOrder = newItems[currentItemIndex].order;
         newItems[currentItemIndex].order = newItems[nextItemIndex].order;
         newItems[nextItemIndex].order = tempOrder;
+        
+        try {
+          const updates = [
+            { id: currentItem.id, order_index: newItems[currentItemIndex].order },
+            { id: nextItem.id, order_index: newItems[nextItemIndex].order }
+          ];
+          
+          const { error } = await supabase
+            .from('nav_items')
+            .upsert(updates, { onConflict: 'id' });
+          
+          if (error) throw error;
+        } catch (error) {
+          console.error("Error updating item order in database:", error);
+          toast({
+            title: "Error updating order",
+            description: "Changes were saved locally but not to the database.",
+            variant: "destructive"
+          });
+        }
       }
     }
     
