@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import SidebarHeader from "./SidebarHeader";
@@ -6,13 +5,9 @@ import SidebarContent from "./SidebarContent";
 import SidebarSettings from "./SidebarSettings";
 import SidebarFooter from "./SidebarFooter";
 import { NavCategory } from "./types";
-import { 
-  NavigationCategory, 
-  NavigationItem 
-} from "@/types";
+import { NavigationCategory, NavigationItem } from "@/types";
 import * as LucideIcons from "lucide-react";
 
-// Map of icon name to Lucide icon component
 const iconMap: Record<string, React.ReactNode> = {
   LayoutDashboard: <LucideIcons.LayoutDashboard className="h-5 w-5" />,
   BarChart3: <LucideIcons.BarChart3 className="h-5 w-5" />,
@@ -27,7 +22,6 @@ const iconMap: Record<string, React.ReactNode> = {
   Building2: <LucideIcons.Building2 className="h-5 w-5" />,
 };
 
-// Function to get icon from map or default
 const getIcon = (iconName: string, size: 'sm' | 'md' = 'md') => {
   if (iconMap[iconName]) {
     return iconMap[iconName];
@@ -37,7 +31,6 @@ const getIcon = (iconName: string, size: 'sm' | 'md' = 'md') => {
     : <LucideIcons.Circle className="h-5 w-5" />;
 };
 
-// Function to convert our stored navigation to sidebar compatible format
 const convertNavigation = (
   categories: NavigationCategory[],
   items: NavigationItem[]
@@ -64,14 +57,12 @@ const convertNavigation = (
     });
 };
 
-// Load saved navigation or use defaults
-const loadSavedNavigation = (): { categories: NavigationCategory[], items: NavigationItem[] } => {
+const loadSavedNavigation = () => {
   const savedNav = localStorage.getItem('appNavigation');
   if (savedNav) {
     return JSON.parse(savedNav);
   }
   
-  // Default navigation data
   return {
     categories: [
       { id: "cat1", name: "Dashboards", icon: "FolderIcon", items: [], order: 0 },
@@ -87,16 +78,27 @@ const loadSavedNavigation = (): { categories: NavigationCategory[], items: Navig
 };
 
 export const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
   const [categories, setCategories] = useState<NavCategory[]>([]);
+  const [logo, setLogo] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('appTheme');
+    if (savedTheme) {
+      const themeSettings = JSON.parse(savedTheme);
+      setLogo(themeSettings.logo);
+      
+      const sidebarElement = document.querySelector('.sidebar-container') as HTMLElement;
+      if (sidebarElement) {
+        sidebarElement.style.backgroundColor = themeSettings.primaryColor;
+      }
+    }
+  }, []);
 
-  // Load navigation from localStorage
   useEffect(() => {
     const { categories: savedCategories, items: savedItems } = loadSavedNavigation();
     const convertedCategories = convertNavigation(savedCategories, savedItems);
     setCategories(convertedCategories);
     
-    // Add event listener for navigation updates
     const handleNavigationUpdate = () => {
       const { categories: updatedCategories, items: updatedItems } = loadSavedNavigation();
       const convertedUpdatedCategories = convertNavigation(updatedCategories, updatedItems);
@@ -105,15 +107,10 @@ export const Sidebar = () => {
     
     window.addEventListener('storage', handleNavigationUpdate);
     
-    // Clean up
     return () => {
       window.removeEventListener('storage', handleNavigationUpdate);
     };
   }, []);
-
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
-  };
 
   const toggleCategory = (index: number) => {
     setCategories(prev => 
@@ -124,20 +121,15 @@ export const Sidebar = () => {
   };
 
   return (
-    <div
-      className={cn(
-        "h-screen bg-powerbi-dark text-white flex flex-col transition-all duration-300",
-        collapsed ? "w-auto min-w-16" : "w-64"
-      )}
-    >
-      <SidebarHeader collapsed={collapsed} toggleSidebar={toggleSidebar} />
+    <div className="sidebar-container h-screen bg-powerbi-dark text-white flex flex-col w-64">
+      <SidebarHeader logo={logo} />
       <SidebarContent 
-        categories={categories} 
-        collapsed={collapsed} 
-        toggleCategory={toggleCategory} 
+        categories={categories}
+        collapsed={false}
+        toggleCategory={toggleCategory}
       />
-      <SidebarSettings collapsed={collapsed} />
-      <SidebarFooter collapsed={collapsed} />
+      <SidebarSettings collapsed={false} />
+      <SidebarFooter collapsed={false} />
     </div>
   );
 };
