@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,11 +10,41 @@ import {
   LayoutDashboard, 
   Database, 
   Users, 
-  CheckCircle 
+  CheckCircle,
+  Check
 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
+
+  const features = {
+    basic: [
+      "Up to 5 report categories",
+      "Basic dashboard analytics",
+      "Standard user management",
+      "Email support",
+      "Basic customization options"
+    ],
+    professional: [
+      "Up to 15 report categories",
+      "Advanced analytics dashboard",
+      "Team collaboration features",
+      "Priority email support",
+      "Custom branding options",
+      "Data export capabilities",
+      "API access"
+    ],
+    enterprise: [
+      "Unlimited report categories",
+      "Enterprise-grade analytics",
+      "Advanced team management",
+      "24/7 dedicated support",
+      "Custom integration options",
+      "Advanced security features",
+      "Custom deployment options",
+      "SLA guarantees"
+    ]
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-powerbi-dark to-powerbi-primary">
@@ -42,13 +71,12 @@ const Index = () => {
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-20 container mx-auto px-6 md:flex items-center justify-between">
-          <div className="max-w-2xl text-white mb-12 md:mb-0">
-            <h1 className="text-5xl font-bold mb-6">
+        <section className="py-24 container mx-auto px-6 md:flex items-center justify-between gap-12">
+          <div className="max-w-2xl text-white mb-12 md:mb-0 animate-fade-in">
+            <h1 className="text-6xl font-bold mb-6 leading-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
               Unified Analytics Platform for Your Business
             </h1>
-            <p className="text-xl mb-8 text-gray-100">
+            <p className="text-xl mb-8 text-gray-100 leading-relaxed">
               Transform your Power BI experience with our intuitive dashboard platform. 
               Access all your reports in one place with powerful navigation, 
               customization, and user management.
@@ -109,11 +137,10 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Features Section */}
-        <section className="bg-white py-20">
+        <section className="bg-white py-24">
           <div className="container mx-auto px-6">
             <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Powerful Features</h2>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 Simplify your reporting workflow with these powerful tools designed to enhance your Power BI experience.
               </p>
@@ -153,17 +180,99 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section className="py-20 bg-gray-50">
+        <section className="py-24 bg-gradient-to-br from-gray-50 to-white" id="pricing">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Trusted by Analytics Teams</h2>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Choose the perfect plan for your business needs
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hover:scale-105 transition-transform duration-300">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-2">Basic</h3>
+                  <p className="text-gray-600 mb-6">Perfect for small teams</p>
+                  <div className="text-4xl font-bold mb-4">$29<span className="text-lg text-gray-500">/mo</span></div>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {features.basic.map((feature, index) => (
+                    <li key={index} className="flex items-center text-gray-700">
+                      <Check className="h-5 w-5 text-green-500 mr-3" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full bg-gray-900 hover:bg-gray-800"
+                  onClick={() => navigate("/login")}
+                >
+                  Get Started
+                </Button>
+              </div>
+
+              <div className="bg-gradient-to-b from-powerbi-primary to-powerbi-dark rounded-2xl shadow-xl p-8 border border-blue-100 transform hover:scale-105 transition-transform duration-300">
+                <div className="text-center mb-8">
+                  <div className="bg-white/20 text-white text-sm font-semibold px-3 py-1 rounded-full inline-block mb-4">
+                    Most Popular
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2 text-white">Professional</h3>
+                  <p className="text-blue-100 mb-6">For growing businesses</p>
+                  <div className="text-4xl font-bold mb-4 text-white">$99<span className="text-lg text-blue-200">/mo</span></div>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {features.professional.map((feature, index) => (
+                    <li key={index} className="flex items-center text-white">
+                      <Check className="h-5 w-5 text-green-400 mr-3" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  className="w-full bg-white text-powerbi-primary hover:bg-gray-100"
+                  onClick={() => navigate("/login")}
+                >
+                  Start Free Trial
+                </Button>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 hover:scale-105 transition-transform duration-300">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
+                  <p className="text-gray-600 mb-6">For large organizations</p>
+                  <div className="text-4xl font-bold mb-4">Custom</div>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  {features.enterprise.map((feature, index) => (
+                    <li key={index} className="flex items-center text-gray-700">
+                      <Check className="h-5 w-5 text-green-500 mr-3" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white"
+                  onClick={() => navigate("/login")}
+                >
+                  Contact Sales
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-24 bg-gray-50">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">Trusted by Analytics Teams</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
                 See how our platform has transformed reporting workflows for these companies.
               </p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
               <div className="bg-white p-8 rounded-lg shadow-sm border">
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
@@ -211,11 +320,10 @@ const Index = () => {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="bg-gradient-to-r from-powerbi-primary to-powerbi-secondary py-16">
+        <section className="bg-gradient-to-r from-powerbi-primary via-blue-600 to-powerbi-secondary py-24">
           <div className="container mx-auto px-6 text-center">
-            <h2 className="text-3xl font-bold text-white mb-6">Ready to transform your reporting experience?</h2>
-            <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
+            <h2 className="text-4xl font-bold text-white mb-6">Ready to transform your reporting experience?</h2>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
               Get started with Power BI Navigator today and unlock the full potential of your business intelligence.
             </p>
             <div className="flex justify-center gap-4">
@@ -239,7 +347,7 @@ const Index = () => {
         </section>
       </main>
 
-      <footer className="bg-powerbi-dark py-12 text-white/70">
+      <footer className="bg-powerbi-dark py-16 text-white/70">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between mb-8">
             <div className="mb-8 md:mb-0">
